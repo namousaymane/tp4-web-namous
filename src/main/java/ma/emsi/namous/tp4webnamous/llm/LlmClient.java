@@ -25,6 +25,8 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import jakarta.enterprise.context.Dependent;
+import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
+import dev.langchain4j.rag.query.transformer.QueryTransformer;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -67,9 +69,14 @@ public class LlmClient implements Serializable {
         );
         QueryRouter queryRouter = new LanguageModelQueryRouter(model, descriptions);
 
+        QueryTransformer queryTransformer = new CompressingQueryTransformer(model);
         RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
+                .queryTransformer(queryTransformer)
                 .queryRouter(queryRouter)
                 .build();
+//        RetrievalAugmentor retrievalAugmentor = DefaultRetrievalAugmentor.builder()
+//                .queryRouter(queryRouter)
+//                .build();
 
         this.chatMemory = MessageWindowChatMemory.withMaxMessages(20);
         this.assistant = AiServices.builder(Assistant.class)
