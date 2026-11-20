@@ -27,6 +27,9 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 import jakarta.enterprise.context.Dependent;
 import dev.langchain4j.rag.query.transformer.CompressingQueryTransformer;
 import dev.langchain4j.rag.query.transformer.QueryTransformer;
+import dev.langchain4j.rag.content.retriever.WebSearchContentRetriever;
+import dev.langchain4j.web.search.WebSearchEngine;
+import dev.langchain4j.web.search.tavily.TavilyWebSearchEngine;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -58,6 +61,15 @@ public class LlmClient implements Serializable {
         ContentRetriever retrieverRag = createRetriever("rag.pdf", embeddingModel);
         ContentRetriever retrieverAeronefs = createRetriever("aeronefs.pdf", embeddingModel);
 
+        WebSearchEngine webSearchEngine = TavilyWebSearchEngine.builder()
+                .apiKey(System.getenv("TAVILY_API_KEY"))
+                .build();
+
+        ContentRetriever webRetriever = WebSearchContentRetriever.builder()
+                .webSearchEngine(webSearchEngine)
+                .maxResults(3)
+                .build();
+
         Map<ContentRetriever, String> descriptions = new HashMap<>();
         descriptions.put(
                 retrieverRag,
@@ -66,6 +78,10 @@ public class LlmClient implements Serializable {
         descriptions.put(
                 retrieverAeronefs,
                 "Document portant sur les aéronefs, l'aviation et l'aéronautique."
+        );
+        descriptions.put(
+                webRetriever,
+                "Recherche sur le Web pour les événements récents, l'actualité, ou toute information générale absente des documents sur le RAG et les aéronefs."
         );
         QueryRouter queryRouter = new LanguageModelQueryRouter(model, descriptions);
 
